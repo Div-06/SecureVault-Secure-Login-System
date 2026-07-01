@@ -1,0 +1,342 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-primary: #020617;
+  --bg-secondary: #0f172a;
+  --bg-card: #1e293b;
+  --border-cyber: rgba(6, 182, 212, 0.3);
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --cyber-cyan: #06b6d4;
+  --cyber-purple: #7c3aed;
+  --neon-green: #00ff88;
+  --neon-cyan: #00d4ff;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ========== Scrollbar ========== */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-secondary); }
+::-webkit-scrollbar-thumb { background: rgba(6, 182, 212, 0.4); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--cyber-cyan); }
+
+/* ========== Cyber Grid Background ========== */
+.cyber-grid {
+  background-image:
+    linear-gradient(rgba(6, 182, 212, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(6, 182, 212, 0.05) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* ========== Glassmorphism ========== */
+.glass {
+  background: rgba(30, 41, 59, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(6, 182, 212, 0.2);
+}
+
+.glass-dark {
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(6, 182, 212, 0.15);
+}
+
+/* ========== Neon Effects ========== */
+.neon-text {
+  color: var(--cyber-cyan);
+  text-shadow: 0 0 10px rgba(6, 182, 212, 0.7), 0 0 20px rgba(6, 182, 212, 0.4);
+}
+
+.neon-border {
+  border: 1px solid var(--cyber-cyan);
+  box-shadow: 0 0 10px rgba(6, 182, 212, 0.3), inset 0 0 10px rgba(6, 182, 212, 0.05);
+}
+
+.neon-glow {
+  box-shadow: 0 0 20px rgba(6, 182, 212, 0.4), 0 0 40px rgba(6, 182, 212, 0.2);
+}
+
+/* ========== Gradient Text ========== */
+.gradient-text {
+  background: linear-gradient(135deg, #06b6d4, #7c3aed);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-text-green {
+  background: linear-gradient(135deg, #00ff88, #06b6d4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ========== Gradient Buttons ========== */
+.btn-cyber {
+  background: linear-gradient(135deg, #06b6d4, #0891b2);
+  border: none;
+  color: white;
+  font-weight: 600;
+  letter-spacing: 0.025em;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-cyber::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+  transition: left 0.5s ease;
+}
+
+.btn-cyber:hover::before { left: 100%; }
+
+.btn-cyber:hover {
+  box-shadow: 0 0 20px rgba(6, 182, 212, 0.6);
+  transform: translateY(-1px);
+}
+
+.btn-cyber:active { transform: translateY(0); }
+
+/* ========== Input Styles ========== */
+.input-cyber {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(6, 182, 212, 0.2);
+  color: #f1f5f9;
+  transition: all 0.3s ease;
+}
+
+.input-cyber:focus {
+  border-color: #06b6d4;
+  box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.15), 0 0 10px rgba(6, 182, 212, 0.1);
+  outline: none;
+}
+
+.input-cyber::placeholder { color: #475569; }
+
+/* ========== Card Styles ========== */
+.card-cyber {
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(6, 182, 212, 0.15);
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.card-cyber:hover {
+  border-color: rgba(6, 182, 212, 0.35);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(6, 182, 212, 0.1);
+}
+
+/* ========== Scan Line Animation ========== */
+.scan-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.scan-effect::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #06b6d4, transparent);
+  animation: scan 3s linear infinite;
+  opacity: 0.5;
+}
+
+@keyframes scan {
+  0% { top: 0; }
+  100% { top: 100%; }
+}
+
+/* ========== Status Indicators ========== */
+.status-online {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #00ff88;
+  box-shadow: 0 0 6px #00ff88;
+  animation: pulse 2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+.status-warning {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f59e0b;
+  box-shadow: 0 0 6px #f59e0b;
+  flex-shrink: 0;
+}
+
+.status-danger {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 0 6px #ef4444;
+  flex-shrink: 0;
+}
+
+/* ========== Page Transitions ========== */
+.page-enter {
+  animation: slideUp 0.4s ease-out;
+}
+
+@keyframes slideUp {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+/* ========== Loading Skeleton ========== */
+.skeleton {
+  background: linear-gradient(90deg, rgba(30,41,59,0.8) 25%, rgba(51,65,85,0.5) 50%, rgba(30,41,59,0.8) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ========== Password Strength ========== */
+.strength-weak { background-color: #ef4444; }
+.strength-fair { background-color: #f59e0b; }
+.strength-good { background-color: #06b6d4; }
+.strength-strong { background-color: #00ff88; }
+
+/* ========== Sidebar Items ========== */
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  color: #94a3b8;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: 1px solid transparent;
+  text-decoration: none;
+}
+
+.sidebar-item:hover {
+  background: rgba(6, 182, 212, 0.1);
+  color: #06b6d4;
+  border-color: rgba(6, 182, 212, 0.2);
+}
+
+.sidebar-item.active {
+  background: rgba(6, 182, 212, 0.15);
+  color: #06b6d4;
+  border-color: rgba(6, 182, 212, 0.3);
+}
+
+/* ========== Custom Checkbox ========== */
+input[type="checkbox"] {
+  accent-color: #06b6d4;
+}
+
+/* ========== Responsive ========== */
+@media (max-width: 768px) {
+  .sidebar-desktop { display: none; }
+}
+
+/* ========== Floating animation ========== */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* ========== Glow animation ========== */
+@keyframes glow {
+  0% { box-shadow: 0 0 5px #06b6d4, 0 0 10px #06b6d4; }
+  100% { box-shadow: 0 0 20px #06b6d4, 0 0 40px #06b6d4; }
+}
+
+/* ========== Table styles ========== */
+.table-cyber {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table-cyber th {
+  background: rgba(6, 182, 212, 0.08);
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 10px 16px;
+  text-align: left;
+  border-bottom: 1px solid rgba(6, 182, 212, 0.15);
+}
+
+.table-cyber td {
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(6, 182, 212, 0.07);
+  color: #cbd5e1;
+  font-size: 13px;
+}
+
+.table-cyber tr:hover td {
+  background: rgba(6, 182, 212, 0.04);
+}
+
+/* ========== OTP Input ========== */
+.otp-input {
+  text-align: center;
+  letter-spacing: 0.5em;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.5rem;
+}
+
+/* ========== QR Code container ========== */
+.qr-container {
+  background: white;
+  padding: 16px;
+  border-radius: 12px;
+  display: inline-block;
+}
