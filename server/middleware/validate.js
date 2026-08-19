@@ -13,7 +13,12 @@ function handleValidation(req, res, next) {
 }
 
 function strongPassword(value) {
-  return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/.test(value);
+  if (!value || value.length < 8) throw new Error('Password must be at least 8 characters');
+  if (!/[A-Z]/.test(value)) throw new Error('Password must contain at least one uppercase letter');
+  if (!/[a-z]/.test(value)) throw new Error('Password must contain at least one lowercase letter');
+  if (!/\d/.test(value)) throw new Error('Password must contain at least one number');
+  if (!/[^A-Za-z\d]/.test(value)) throw new Error('Password must contain at least one special character (e.g. !@#$%)');
+  return true;
 }
 
 module.exports = { handleValidation, strongPassword };

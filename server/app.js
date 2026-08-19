@@ -59,12 +59,15 @@ app.use(session({
   name: 'sls.sid',
 }));
 
-// CSRF token endpoint
+// CSRF token endpoint — save session first so the cookie is committed before the client uses the token
 app.get('/api/csrf-token', (req, res) => {
   if (!req.session.csrfToken) {
     req.session.csrfToken = randomUUID();
   }
-  res.json({ csrfToken: req.session.csrfToken });
+  req.session.save((err) => {
+    if (err) return res.status(500).json({ success: false, message: 'Session error' });
+    res.json({ csrfToken: req.session.csrfToken });
+  });
 });
 
 // CSRF validation middleware (skip for GET, HEAD, OPTIONS)

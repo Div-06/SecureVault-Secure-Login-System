@@ -4,9 +4,22 @@ const pool = require('../config/database');
 
 const dataFile = path.join(__dirname, '..', 'database', 'dev-data.json');
 
+// Circuit breaker: once MySQL fails, skip it for the rest of this process run
+let dbDown = false;
+
 function isDbUnavailable(err) {
-  return ['ECONNREFUSED', 'ER_BAD_DB_ERROR', 'ER_ACCESS_DENIED_ERROR'].includes(err?.code);
+  if (!err) return false;
+  const codes = [
+    'ECONNREFUSED', 'ETIMEDOUT', 'EHOSTUNREACH', 'ENOTFOUND', 'ECONNRESET',
+    'ER_BAD_DB_ERROR', 'ER_ACCESS_DENIED_ERROR', 'ER_NOT_SUPPORTED_AUTH_MODE',
+    'PROTOCOL_CONNECTION_LOST', 'PROTOCOL_ENQUEUE_AFTER_FATAL_ERROR',
+  ];
+  if (codes.includes(err.code)) return true;
+  if (err instanceof AggregateError) return true;
+  if (err.message && /ECONNREFUSED|connection refused|Cannot enqueue/i.test(err.message)) return true;
+  return false;
 }
+
 
 async function readStore() {
   try {
@@ -29,10 +42,15 @@ async function fallback(work) {
 }
 
 async function queryOrFallback(query, fallbackWork) {
+  if (dbDown) {
+    return fallback(fallbackWork);
+  }
   try {
     return await query();
   } catch (err) {
     if (!isDbUnavailable(err)) throw err;
+    dbDown = true; // trip the circuit breaker
+    console.warn('[DB] MySQL unavailable — switching to JSON fallback for this session');
     return fallback(fallbackWork);
   }
 }

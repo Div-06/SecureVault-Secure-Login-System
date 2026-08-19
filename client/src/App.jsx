@@ -21,7 +21,7 @@ import {
 
 const API_BASE = '/api';
 
-async function request(path, { method = 'GET', body, token, csrfToken } = {}) {
+async function request(path, { method = 'GET', body, token, csrfToken } = {}, _isRetry = false) {
   const headers = { 'Content-Type': 'application/json' };
   if (token) headers.Authorization = `Bearer ${token}`;
   if (csrfToken) headers['X-CSRF-Token'] = csrfToken;
@@ -33,9 +33,32 @@ async function request(path, { method = 'GET', body, token, csrfToken } = {}) {
     body: body ? JSON.stringify(body) : undefined,
   });
   const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(data.message || 'Request failed');
+
+  // Auto-refresh CSRF token on 403 and retry once
+  if (response.status === 403 && data.message?.includes('CSRF') && !_isRetry) {
+    const refresh = await fetch(`${API_BASE}/csrf-token`, { credentials: 'include' });
+    const refreshData = await refresh.json().catch(() => ({}));
+    if (refreshData.csrfToken) {
+      // Update the stored token in localStorage so useAuth picks it up
+      localStorage.setItem('securevault.csrf', refreshData.csrfToken);
+      return request(path, { method, body, token, csrfToken: refreshData.csrfToken }, true);
+    }
+  }
+
+  if (!response.ok) {
+    const err = new Error(data.message || 'Request failed');
+    // Attach field-level errors if server sent them (422 validation errors)
+    if (data.errors && Array.isArray(data.errors)) {
+      err.fieldErrors = data.errors.reduce((acc, e) => {
+        acc[e.field] = e.message;
+        return acc;
+      }, {});
+    }
+    throw err;
+  }
   return data;
 }
+
 
 function useAuth() {
   const [token, setToken] = useState(() => localStorage.getItem('securevault.token') || '');
@@ -247,19 +270,38 @@ function Login({ auth }) {
 function Register({ auth }) {
   const [form, setForm] = useState({ full_name: '', username: '', email: '', password: '', confirm_password: '' });
   const [loading, setLoading] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
   const navigate = useNavigate();
-  const set = (key) => (e) => setForm({ ...form, [key]: e.target.value });
+  const set = (key) => (e) => {
+    setForm({ ...form, [key]: e.target.value });
+    setFieldErrors((prev) => ({ ...prev, [key]: '' }));
+  };
 
   const submit = async (event) => {
     event.preventDefault();
+    setFieldErrors({});
+
+    // Client-side password confirmation check
+    if (form.password !== form.confirm_password) {
+      setFieldErrors({ confirm_password: 'Passwords do not match' });
+      toast.error('Passwords do not match');
+      return;
+    }
+
     setLoading(true);
     try {
       const data = await auth.api('/auth/register', { method: 'POST', body: form });
       auth.saveSession(data.user, data.token);
-      toast.success('Account created');
+      toast.success('Account created successfully!');
       navigate('/dashboard');
     } catch (err) {
-      toast.error(err.message);
+      // If server returns per-field errors, map them and show each one
+      if (err.fieldErrors) {
+        setFieldErrors(err.fieldErrors);
+        Object.values(err.fieldErrors).forEach((msg) => toast.error(msg));
+      } else {
+        toast.error(err.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -270,18 +312,39 @@ function Register({ auth }) {
       <h2 className="mb-2 text-2xl font-bold">Create account</h2>
       <p className="mb-6 text-sm text-dark-300">Start with a strong password and a verified identity profile.</p>
       <form onSubmit={submit} className="space-y-4">
-        <Field label="Full name" icon={User} value={form.full_name} onChange={set('full_name')} required />
-        <Field label="Username" icon={UserPlus} value={form.username} onChange={set('username')} required />
-        <Field label="Email" icon={Mail} type="email" value={form.email} onChange={set('email')} required />
-        <Field label="Password" icon={Lock} type="password" value={form.password} onChange={set('password')} required />
-        <PasswordStrength value={form.password} />
-        <Field label="Confirm password" icon={Lock} type="password" value={form.confirm_password} onChange={set('confirm_password')} required />
-        <button disabled={loading || !auth.csrfToken} className="btn-cyber w-full rounded-lg px-4 py-3">{loading ? 'Creating...' : 'Create account'}</button>
+        <div>
+          <Field label="Full name" icon={User} value={form.full_name} onChange={set('full_name')} required />
+          {fieldErrors.full_name && <p className="mt-1 text-xs text-red-400">{fieldErrors.full_name}</p>}
+        </div>
+        <div>
+          <Field label="Username" icon={UserPlus} value={form.username} onChange={set('username')} required />
+          {fieldErrors.username && <p className="mt-1 text-xs text-red-400">{fieldErrors.username}</p>}
+        </div>
+        <div>
+          <Field label="Email" icon={Mail} type="email" value={form.email} onChange={set('email')} required />
+          {fieldErrors.email && <p className="mt-1 text-xs text-red-400">{fieldErrors.email}</p>}
+        </div>
+        <div>
+          <Field label="Password" icon={Lock} type="password" value={form.password} onChange={set('password')} required />
+          <PasswordStrength value={form.password} />
+          {fieldErrors.password && <p className="mt-1 text-xs text-red-400">{fieldErrors.password}</p>}
+        </div>
+        <div>
+          <Field label="Confirm password" icon={Lock} type="password" value={form.confirm_password} onChange={set('confirm_password')} required />
+          {fieldErrors.confirm_password && <p className="mt-1 text-xs text-red-400">{fieldErrors.confirm_password}</p>}
+        </div>
+        <div className="rounded-lg border border-cyber-500/20 bg-dark-950/60 px-3 py-2 text-xs text-dark-400">
+          Password must be 8+ chars with uppercase, lowercase, number &amp; special character.
+        </div>
+        <button disabled={loading || !auth.csrfToken} className="btn-cyber w-full rounded-lg px-4 py-3">
+          {loading ? 'Creating...' : !auth.csrfToken ? 'Loading security...' : 'Create account'}
+        </button>
       </form>
       <p className="mt-6 text-sm text-dark-300">Already registered? <Link className="text-cyber-300" to="/login">Sign in</Link></p>
     </AuthLayout>
   );
 }
+
 
 function Dashboard({ auth }) {
   const [history, setHistory] = useState([]);
